@@ -10,12 +10,12 @@ import { loadSettings, saveSettings, loadSavedGame, saveGameState } from "./stor
 // ---------- 可調量值 ----------
 // windowM=射擊窗(靶側身前幾公尺開放);sway/drawDuration/aimAssist=archery 同款;speedSway=速度對晃動的加成
 export const DIFFICULTY_PRESETS = {
-  // 07-15 使用者回報「太難射不到」→ 全檔放軟:馬更慢、射擊窗更長、晃動更小
-  kids: { baseSpeed: 4.2, boost: 1.8, targets: 6, windowM: 30, swayBase: 0.01, swayGrow: 0.1, drawDuration: 0.48, aimAssist: 0.78, speedSway: 0.18 },
-  child: { baseSpeed: 5.2, boost: 2.2, targets: 7, windowM: 27, swayBase: 0.026, swayGrow: 0.22, drawDuration: 0.54, aimAssist: 0.58, speedSway: 0.3 },
-  easy: { baseSpeed: 6.0, boost: 2.8, targets: 8, windowM: 24, swayBase: 0.055, swayGrow: 0.38, drawDuration: 0.6, aimAssist: 0.38, speedSway: 0.45 },
-  normal: { baseSpeed: 7.0, boost: 3.4, targets: 8, windowM: 21, swayBase: 0.09, swayGrow: 0.62, drawDuration: 0.66, aimAssist: 0.22, speedSway: 0.6 },
-  hard: { baseSpeed: 8.0, boost: 4.2, targets: 10, windowM: 17, swayBase: 0.15, swayGrow: 0.95, drawDuration: 0.72, aimAssist: 0, speedSway: 0.95 },
+  // 07-15 兩輪校正:靶大+拉近+準星歸中保留;馬速回拉(太簡單回報)——「好瞄但要快」
+  kids: { baseSpeed: 5.0, boost: 2.2, targets: 6, windowM: 30, swayBase: 0.01, swayGrow: 0.1, drawDuration: 0.48, aimAssist: 0.78, speedSway: 0.18 },
+  child: { baseSpeed: 6.2, boost: 2.6, targets: 7, windowM: 27, swayBase: 0.026, swayGrow: 0.22, drawDuration: 0.54, aimAssist: 0.58, speedSway: 0.3 },
+  easy: { baseSpeed: 7.2, boost: 3.2, targets: 8, windowM: 24, swayBase: 0.055, swayGrow: 0.38, drawDuration: 0.6, aimAssist: 0.38, speedSway: 0.45 },
+  normal: { baseSpeed: 8.2, boost: 3.8, targets: 8, windowM: 21, swayBase: 0.09, swayGrow: 0.62, drawDuration: 0.66, aimAssist: 0.22, speedSway: 0.6 },
+  hard: { baseSpeed: 9.2, boost: 4.8, targets: 10, windowM: 17, swayBase: 0.15, swayGrow: 0.95, drawDuration: 0.72, aimAssist: 0, speedSway: 0.95 },
 };
 
 export const DIFFICULTY_LABELS = {
