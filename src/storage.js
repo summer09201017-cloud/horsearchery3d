@@ -2,7 +2,7 @@ const SETTINGS_KEY = "horsearchery3d-settings-v1";
 const SAVE_KEY = "horsearchery3d-save-v1";
 
 const defaultSettings = {
-  difficulty: "normal",
+  difficulty: "child", // 07-15:預設降為兒童(太難回報)
   modeId: "standard",
   horseCoat: "brown",
   audioEnabled: true,

@@ -10,11 +10,12 @@ import { loadSettings, saveSettings, loadSavedGame, saveGameState } from "./stor
 // ---------- 可調量值 ----------
 // windowM=射擊窗(靶側身前幾公尺開放);sway/drawDuration/aimAssist=archery 同款;speedSway=速度對晃動的加成
 export const DIFFICULTY_PRESETS = {
-  kids: { baseSpeed: 5.5, boost: 2.0, targets: 6, windowM: 26, swayBase: 0.014, swayGrow: 0.12, drawDuration: 0.5, aimAssist: 0.66, speedSway: 0.3 },
-  child: { baseSpeed: 6.5, boost: 2.6, targets: 7, windowM: 23, swayBase: 0.035, swayGrow: 0.28, drawDuration: 0.56, aimAssist: 0.4, speedSway: 0.5 },
-  easy: { baseSpeed: 7.5, boost: 3.2, targets: 8, windowM: 20, swayBase: 0.07, swayGrow: 0.45, drawDuration: 0.62, aimAssist: 0.2, speedSway: 0.7 },
-  normal: { baseSpeed: 8.5, boost: 3.8, targets: 8, windowM: 18, swayBase: 0.11, swayGrow: 0.75, drawDuration: 0.68, aimAssist: 0.06, speedSway: 0.9 },
-  hard: { baseSpeed: 9.5, boost: 4.6, targets: 10, windowM: 15, swayBase: 0.18, swayGrow: 1.05, drawDuration: 0.75, aimAssist: 0, speedSway: 1.15 },
+  // 07-15 使用者回報「太難射不到」→ 全檔放軟:馬更慢、射擊窗更長、晃動更小
+  kids: { baseSpeed: 4.2, boost: 1.8, targets: 6, windowM: 30, swayBase: 0.01, swayGrow: 0.1, drawDuration: 0.48, aimAssist: 0.78, speedSway: 0.18 },
+  child: { baseSpeed: 5.2, boost: 2.2, targets: 7, windowM: 27, swayBase: 0.026, swayGrow: 0.22, drawDuration: 0.54, aimAssist: 0.58, speedSway: 0.3 },
+  easy: { baseSpeed: 6.0, boost: 2.8, targets: 8, windowM: 24, swayBase: 0.055, swayGrow: 0.38, drawDuration: 0.6, aimAssist: 0.38, speedSway: 0.45 },
+  normal: { baseSpeed: 7.0, boost: 3.4, targets: 8, windowM: 21, swayBase: 0.09, swayGrow: 0.62, drawDuration: 0.66, aimAssist: 0.22, speedSway: 0.6 },
+  hard: { baseSpeed: 8.0, boost: 4.2, targets: 10, windowM: 17, swayBase: 0.15, swayGrow: 0.95, drawDuration: 0.72, aimAssist: 0, speedSway: 0.95 },
 };
 
 export const DIFFICULTY_LABELS = {
@@ -50,8 +51,8 @@ export function getModeConfig(modeId) {
 }
 
 // ---------- 場地/靶常數 ----------
-const TARGET_R = 0.62; // 靶面半徑
-const TARGET_SIDE = 5.2; // 靶離路徑中線的側距
+const TARGET_R = 0.85; // 靶面半徑(07-15 太難回報:放大)
+const TARGET_SIDE = 3.6; // 靶離路徑中線的側距(07-15:拉近)
 const TARGET_H = 2.05; // 靶心高(隨長腿 v3 馬抬高)
 const RING_COLORS = [0xf3f4f6, 0x25272b, 0x3f9be0, 0xe8443c, 0xf6d743]; // 白黑藍紅金(外→內)
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -755,6 +756,14 @@ export class HorseArcheryGame {
     this.pushHud();
   }
 
+  _watchActiveTarget() {
+    const t = this.activeTarget();
+    if (t !== this._lastActive) {
+      this._lastActive = t;
+      if (t) this.aimLocal.set(0, 0); // 新靶=準星歸中:不動滑鼠也瞄在紅心附近,滑鼠只做微調
+    }
+  }
+
   activeTarget() {
     const t = this.targets && this.targets[this.targetIdx];
     if (!t || t.shot) return null;
@@ -983,7 +992,7 @@ export class HorseArcheryGame {
       const boosting = this.input.isDown("up") || this.input.isDown("sprint");
       const slowing = this.input.isDown("down");
       // 拉弓時馬自然收步(真實騎射:放箭窗口收韁)
-      const drawSlow = this.drawing ? 1.6 : 0;
+      const drawSlow = this.drawing ? 2.4 : 0; // 拉弓收步更多(07-15 放軟)
       const target = preset.baseSpeed + (boosting ? preset.boost : 0) - (slowing ? 2.0 : 0) - drawSlow;
       this.speed += (Math.max(3, target) - this.speed) * Math.min(1, delta * 1.8);
       this.dist += this.speed * delta;
@@ -1030,6 +1039,7 @@ export class HorseArcheryGame {
     }
 
     this.handleKeys();
+    this._watchActiveTarget();
     this.updateAim();
     this.updateHorsePose();
     this.placeHorse();
