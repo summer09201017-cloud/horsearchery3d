@@ -52,7 +52,7 @@ export function getModeConfig(modeId) {
 // ---------- 場地/靶常數 ----------
 const TARGET_R = 0.62; // 靶面半徑
 const TARGET_SIDE = 5.2; // 靶離路徑中線的側距
-const TARGET_H = 1.7; // 靶心高(騎射靶架高)
+const TARGET_H = 2.05; // 靶心高(隨長腿 v3 馬抬高)
 const RING_COLORS = [0xf3f4f6, 0x25272b, 0x3f9be0, 0xe8443c, 0xf6d743]; // 白黑藍紅金(外→內)
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const randomSigned = (s) => (Math.random() * 2 - 1) * s;
@@ -232,17 +232,17 @@ function makeHorse({ coat = 0x8a5a33, mane = 0x3a2a1c } = {}) {
   group.add(rig);
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.62, 1.7), coatMat);
-  body.position.set(0, 1.38, 0);
+  body.position.set(0, 1.58, 0);
   rig.add(body);
   const chestCap = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.5, 0.4), coatMat);
-  chestCap.position.set(0, 1.42, 0.95);
+  chestCap.position.set(0, 1.62, 0.95);
   rig.add(chestCap);
   const rump = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.5, 0.42), coatMat);
-  rump.position.set(0, 1.4, -0.95);
+  rump.position.set(0, 1.6, -0.95);
   rig.add(rump);
 
   const neckPivot = new THREE.Group();
-  neckPivot.position.set(0, 1.62, 1.05);
+  neckPivot.position.set(0, 1.82, 1.05);
   rig.add(neckPivot);
   const neck = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.72, 0.34), coatMat);
   neck.rotation.x = 0.7;
@@ -286,7 +286,7 @@ function makeHorse({ coat = 0x8a5a33, mane = 0x3a2a1c } = {}) {
   head.add(forelock);
 
   const tail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.66, 0.14), maneMat);
-  tail.position.set(0, 1.25, -1.22);
+  tail.position.set(0, 1.45, -1.22);
   tail.rotation.x = 0.55;
   rig.add(tail);
 
@@ -295,10 +295,10 @@ function makeHorse({ coat = 0x8a5a33, mane = 0x3a2a1c } = {}) {
       upperMaterial: coatMat,
       lowerMaterial: sock ? sockMat : coatMat,
       endMaterial: hoofMat,
-      upperLen: 0.52, lowerLen: 0.5, upperRadius: 0.085, lowerRadius: 0.062, // 長腿 v2(07-15 點名:馬腿再長)
+      upperLen: 0.62, lowerLen: 0.6, upperRadius: 0.085, lowerRadius: 0.062, // 長腿 v3(07-15 再點名) // 長腿 v2(07-15 點名:馬腿再長)
       end: "foot",
     });
-    leg.pivot.position.set(x, 1.15, z);
+    leg.pivot.position.set(x, 1.35, z);
     rig.add(leg.pivot);
     return leg;
   };
@@ -310,10 +310,10 @@ function makeHorse({ coat = 0x8a5a33, mane = 0x3a2a1c } = {}) {
   ];
 
   const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.62), new THREE.MeshStandardMaterial({ color: 0x4a2f1c, roughness: 0.5 }));
-  saddle.position.set(0, 1.75, 0.12);
+  saddle.position.set(0, 1.95, 0.12);
   rig.add(saddle);
   const pad = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.06, 0.78), new THREE.MeshStandardMaterial({ color: 0x2f5f8a, roughness: 0.85 }));
-  pad.position.set(0, 1.7, 0.12);
+  pad.position.set(0, 1.9, 0.12);
   rig.add(pad);
 
   return { group, rig, body, neckPivot, head, tail, legs, saddle, coatMat, maneMat };
@@ -591,7 +591,7 @@ export class HorseArcheryGame {
     const hat = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), hatMat);
     hat.position.y = 2.16;
     this.rider.rig.add(hat);
-    this.rider.group.position.set(0, 0.82, 0.12);
+    this.rider.group.position.set(0, 1.02, 0.12);
     this.rider.group.scale.setScalar(0.95);
     this.horse.rig.add(this.rider.group);
 
@@ -824,7 +824,7 @@ export class HorseArcheryGame {
     if (r <= TARGET_R) ring = Math.max(1, 10 - Math.floor(r / (TARGET_R / 10)));
     // 命中點世界座標(靶面局部 → 世界)
     const impact = new THREE.Vector3(ix, iy, 0.02).applyQuaternion(target.quaternion).add(target.center);
-    const from = this.horse.group.position.clone().add(new THREE.Vector3(0, 1.9, 0));
+    const from = this.horse.group.position.clone().add(new THREE.Vector3(0, 2.5, 0));
     const arrow = makeArrow(0.9);
     arrow.position.copy(from);
     this.scene.add(arrow);
