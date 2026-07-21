@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { InputManager } from "./input.js";
 import { loadSettings, saveSettings, loadSavedGame, saveGameState } from "./storage.js";
+import { animateIdleHead, animateCrowdCheer, EAR_SAFE_PHI } from "./idle-life.js";
 
 // —— 3D 騎射(horsearchery3d)——騎乘引擎(equestrian3d)× 射箭引擎(archery3d)混搭首例(2026-07-15)。
 // 馬沿閉環賽道自動尋路+控速節奏(騎乘核心);道旁環靶+拉弓/晃動/放箭(射箭核心)。
@@ -128,55 +129,65 @@ function makePerson({ shirt = 0x2f6f4e, pants = 0x2a3550, skin = 0xf3cca6, hair 
   waist.add(beltLine);
   rig.add(waist);
 
+  // 頭+臉群組 headGroup(樞紐=頭中心 2.12,idle-life 接線):idle 轉頭時整顆頭連五官/髮帽一起轉。
+  // H(y)=y−頭中心 → 群組化前後視覺位置逐一相同(零位移)。
+  const HEAD_CENTER_Y = 2.12;
+  const headGroup = new THREE.Group();
+  headGroup.position.y = HEAD_CENTER_Y;
+  rig.add(headGroup);
+  const H = (y) => y - HEAD_CENTER_Y;
+
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 18, 18), skinMat);
-  head.position.y = 2.12;
-  rig.add(head);
+  head.position.y = H(2.12);
+  headGroup.add(head);
   const earL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), skinMat);
   earL.scale.set(0.45, 1, 0.8);
-  earL.position.set(-0.245, 2.11, 0);
-  rig.add(earL);
+  earL.position.set(-0.245, H(2.11), 0);
+  headGroup.add(earL);
   const earR = earL.clone();
   earR.position.x = 0.245;
-  rig.add(earR);
+  headGroup.add(earR);
 
+  // 耳前無髮鐵律:髮兩件式——①頭頂瓜皮帽(theta 0→0.32π,帽緣高於眉 2.26/眼 2.18/耳)
+  // ②後腦半球用 EAR_SAFE_PHI(phi 1.06π~1.94π);兩鬢與耳前露臉頰+耳朵。
   const hairMat = new THREE.MeshStandardMaterial({ color: hair, roughness: 0.85 });
-  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.265, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.46), hairMat);
-  hairCap.position.y = 2.13;
+  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.265, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.32), hairMat);
+  hairCap.position.y = H(2.13);
   hairCap.rotation.x = -0.22;
-  rig.add(hairCap);
+  headGroup.add(hairCap);
   const hairBack = new THREE.Mesh(
-    new THREE.SphereGeometry(0.255, 16, 8, Math.PI, Math.PI, Math.PI * 0.35, Math.PI * (gender === "f" ? 0.38 : 0.22)),
+    new THREE.SphereGeometry(0.255, 16, 8, EAR_SAFE_PHI.start, EAR_SAFE_PHI.end - EAR_SAFE_PHI.start, Math.PI * 0.28, Math.PI * (gender === "f" ? 0.44 : 0.32)),
     hairMat,
   );
-  hairBack.position.y = 2.12;
-  rig.add(hairBack);
+  hairBack.position.y = H(2.12);
+  headGroup.add(hairBack);
 
   const faceDark = new THREE.MeshBasicMaterial({ color: 0x25201a });
   const faceWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), faceWhite);
-  eyeL.position.set(-0.09, 2.18, 0.21);
-  rig.add(eyeL);
+  eyeL.position.set(-0.09, H(2.18), 0.21);
+  headGroup.add(eyeL);
   const eyeR = eyeL.clone();
   eyeR.position.x = 0.09;
-  rig.add(eyeR);
+  headGroup.add(eyeR);
   const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), faceDark);
-  pupilL.position.set(-0.09, 2.18, 0.25);
-  rig.add(pupilL);
+  pupilL.position.set(-0.09, H(2.18), 0.25);
+  headGroup.add(pupilL);
   const pupilR = pupilL.clone();
   pupilR.position.x = 0.09;
-  rig.add(pupilR);
+  headGroup.add(pupilR);
   const browL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.02, 0.02), faceDark);
-  browL.position.set(-0.09, 2.26, 0.22);
+  browL.position.set(-0.09, H(2.26), 0.22);
   browL.rotation.z = 0.16;
-  rig.add(browL);
+  headGroup.add(browL);
   const browR = browL.clone();
   browR.position.x = 0.09;
   browR.rotation.z = -0.16;
-  rig.add(browR);
+  headGroup.add(browR);
   const smile = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.014, 8, 14, Math.PI), faceDark);
-  smile.position.set(0, 2.04, 0.21);
+  smile.position.set(0, H(2.04), 0.21);
   smile.rotation.z = Math.PI;
-  rig.add(smile);
+  headGroup.add(smile);
 
   const shoeMat = new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 0.85 });
   const mkArm = (x) => {
@@ -208,7 +219,7 @@ function makePerson({ shirt = 0x2f6f4e, pants = 0x2a3550, skin = 0xf3cca6, hair 
   const rightLeg = mkLeg(0.15);
 
   group.scale.setScalar(scale);
-  return { group, rig, head, waist, leftArm, rightArm, leftLeg, rightLeg };
+  return { group, rig, head, headGroup, smile, waist, leftArm, rightArm, leftLeg, rightLeg };
 }
 
 // ---------- 馬(equestrian3d 同款四足;coatMat/maneMat 共用材質可換色) ----------
@@ -588,10 +599,11 @@ export class HorseArcheryGame {
     this.rider.leftArm.joint.rotation.x = -0.1;
     this.rider.rightArm.pivot.rotation.x = -1.05;
     this.rider.rightArm.joint.rotation.x = -0.7;
+    // 皮帽收進 headGroup(隨頭轉);帽緣收高到眉上(theta 0.5π→0.36π),兩側不壓耳前(耳前無髮鐵律)
     const hatMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2a, roughness: 0.6 });
-    const hat = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), hatMat);
-    hat.position.y = 2.16;
-    this.rider.rig.add(hat);
+    const hat = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.36), hatMat);
+    hat.position.y = 2.16 - 2.12; // H(2.16):headGroup 樞紐=頭中心 2.12
+    this.rider.headGroup.add(hat);
     this.rider.group.position.set(0, 1.02, 0.12);
     this.rider.group.scale.setScalar(0.95);
     this.horse.rig.add(this.rider.group);
@@ -652,6 +664,7 @@ export class HorseArcheryGame {
 
   buildCrowd() {
     this.crowd = new THREE.Group();
+    this.crowdFigures = []; // idle-life 人浪名冊:{fig, phase, rigY}(相位=座號×0.9+對側偏移,決定性,禁 Math.random)
     const shirts = [0xd98a3d, 0x3d78d9, 0xc94f8f, 0x4fae6a, 0xb0552f, 0x8a5ac0];
     for (const side of [-1, 1]) {
       for (let i = 0; i < 7; i += 1) {
@@ -665,6 +678,7 @@ export class HorseArcheryGame {
         p.group.position.set(-27 + i * 9, 0, side * 38.2);
         p.group.rotation.y = side > 0 ? Math.PI : 0;
         this.crowd.add(p.group);
+        this.crowdFigures.push({ fig: p, phase: i * 0.9 + (side > 0 ? 0.45 : 0), rigY: p.rig.position.y });
       }
     }
     this.scene.add(this.crowd);
@@ -1042,6 +1056,7 @@ export class HorseArcheryGame {
     this._watchActiveTarget();
     this.updateAim();
     this.updateHorsePose();
+    this.updateIdleLife();
     this.placeHorse();
     this.updateReticle();
     this.updateCamera(delta);
@@ -1137,6 +1152,26 @@ export class HorseArcheryGame {
     const pts = this.bow.stringGeo.attributes.position;
     pts.setXYZ(1, 0, 0, 0.02 + this.power * 0.22);
     pts.needsUpdate = true;
+  }
+
+  // ---------- idle 生動(idle-life 接線) ----------
+  // 騎射手:待機/騎行「非瞄準段」偶爾平滑轉頭看一下+微笑;拉弓或靶在射擊窗內=不轉頭,平滑回正(絕不瞬跳)。
+  // ⚠ 馬不套 idle-life(馬頭別動);觀眾人浪每幀驅動,相位決定性錯開。
+  updateIdleLife() {
+    const r = this.rider;
+    if (r && r.headGroup) {
+      const aiming = this.phase === "riding" && (this.drawing || !!this.activeTarget());
+      if (aiming) {
+        r.headGroup.rotation.y += (0 - r.headGroup.rotation.y) * 0.15;
+        if (r.smile) {
+          r.smile.scale.x += (1 - r.smile.scale.x) * 0.15;
+          r.smile.scale.y += (1 - r.smile.scale.y) * 0.15;
+        }
+      } else {
+        animateIdleHead(r.headGroup, r.smile, this.time, { phase: 0.7, period: 6.2 });
+      }
+    }
+    if (this.crowdFigures) animateCrowdCheer(this.crowdFigures, this.time);
   }
 
   updateCamera(delta) {
