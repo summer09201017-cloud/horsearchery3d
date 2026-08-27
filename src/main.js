@@ -3,6 +3,7 @@ import { HorseArcheryGame, GAME_MODES } from "./game.js";
 import { AudioManager } from "./audio.js";
 import { speakLine, setVoiceEnabled } from "./voice.js";
 import { hasSavedGame, loadSettings, saveSettings } from "./storage.js";
+import { crowdCheer } from "./idle-life.js";   // 🙌 得分那一刻:畫面與聲音同一刻
 
 const ui = {
   canvas: document.querySelector("#gameCanvas"),
@@ -176,17 +177,17 @@ function handleGameEvent(event) {
         pushCommentary(`第 ${event.idx} 靶——偏出靶外。`, "cool", "可惜,這箭偏了。");
       } else if (event.isBull) {
         audio.scoreSting();
-        audio.crowdCheer(1);
+        audio.crowdCheer(1); crowdCheer(game).trigger(1);
         audio.vibrate([35, 25, 55]);
         pushCommentary(`第 ${event.idx} 靶——十環!正中紅心!`, "hot", "十環!馬背上的神射手!");
       } else if (event.isGold) {
         audio.scoreSting();
-        audio.crowdCheer(0.7);
+        audio.crowdCheer(0.7); crowdCheer(game).trigger(0.7);
         audio.vibrate([30, 20, 40]);
         pushCommentary(`第 ${event.idx} 靶——${event.ring} 環,金心區!`, "hot", "九環!命中金心!");
       } else if (event.ring >= 7) {
         audio.rebound();
-        audio.crowdCheer(0.3);
+        audio.crowdCheer(0.3); crowdCheer(game).trigger(0.3);
         pushCommentary(`第 ${event.idx} 靶——${event.ring} 環,穩穩命中!`, "info", "好箭!穩穩上靶!");
       } else {
         audio.rebound();

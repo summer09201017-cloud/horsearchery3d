@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { InputManager } from "./input.js";
 import { loadSettings, saveSettings, loadSavedGame, saveGameState } from "./storage.js";
-import { animateIdleHead, animateCrowdCheer, EAR_SAFE_PHI } from "./idle-life.js";
+import { animateIdleHead, animateCrowdCheer, EAR_SAFE_PHI, crowdCheer } from "./idle-life.js";
 
 // —— 3D 騎射(horsearchery3d)——騎乘引擎(equestrian3d)× 射箭引擎(archery3d)混搭首例(2026-07-15)。
 // 馬沿閉環賽道自動尋路+控速節奏(騎乘核心);道旁環靶+拉弓/晃動/放箭(射箭核心)。
@@ -1171,7 +1171,7 @@ export class HorseArcheryGame {
         animateIdleHead(r.headGroup, r.smile, this.time, { phase: 0.7, period: 6.2 });
       }
     }
-    if (this.crowdFigures) animateCrowdCheer(this.crowdFigures, this.time);
+    if (this.crowdFigures) animateCrowdCheer(this.crowdFigures, this.time, { cheer: crowdCheer(this).stepAt(this.time) });
   }
 
   updateCamera(delta) {
